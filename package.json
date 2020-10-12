@@ -27,5 +27,9 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mlewando/ascii-timeline.git"
+  },
+  "dependencies": {
+    "compute-gcd": "^1.2.0",
+    "date-fns": "^2.16.1"
   }
 }

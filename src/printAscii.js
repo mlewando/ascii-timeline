@@ -1,8 +1,21 @@
+import gcd from "compute-gcd";
+import {
+  differenceInMilliseconds,
+  differenceInYears,
+  eachDayOfInterval,
+  isEqual,
+  startOfDay,
+  startOfHour,
+  startOfMinute,
+  startOfMonth,
+  startOfSecond,
+  startOfYear,
+} from "date-fns";
+
 const MILLIS_IN_DAY = 24 * 60 * 60 * 1000;
 
 export function printAscii(data, options) {
-  const idKeys = getGroupKeys(data);
-  const columns = idKeys.map((key) => {
+  const columns = getGroupKeys(data).map((key) => {
     const width = getColumnWidth([key, ...data.map((e) => e[key])]);
     return {
       key,
@@ -23,7 +36,14 @@ export function printAscii(data, options) {
     start: timePoints[0],
     end: timePoints[timePoints.length - 1],
   };
-  const days = getDaysInInterval(timelineInterval);
+  const days = eachDayOfInterval(timelineInterval).map((time) => ({
+    time,
+    day: time.getDate(),
+    share:
+      time < timelineInterval.start
+        ? differenceInMilliseconds(timelineInterval.start, time) / MILLIS_IN_DAY
+        : 1,
+  }));
 
   return [
     columns.map((c) => c.label).join(" ") +
@@ -42,47 +62,88 @@ export function printAscii(data, options) {
         " " +
         r.intervals
           .map((interval, i, array) => {
-            const gap =
-              interval.start.valueOf() -
-              (i > 0 ? array[i - 1].end : timelineInterval.start).valueOf();
-            const duration = interval.end.valueOf() - interval.start.valueOf();
-            return (
-              "".padStart(
-                (gap / resolutionInMs) * pointWidth - (i > 0 ? 2 : 0)
-              ) +
-              `${interval.start.getHours()}`.padStart(2, " ") +
-              "".padEnd((duration / resolutionInMs) * pointWidth - 2, "-") +
-              `${interval.end.getHours()}`.padStart(
-                2,
-                interval.end.getHours() === 0 ? "0" : "-"
-              )
+            const gapPad = printGap(
+              {
+                start: i > 0 ? array[i - 1].end : timelineInterval.start,
+                end: interval.start,
+              },
+              i === 0,
+              resolutionInMs,
+              pointWidth
             );
+
+            const intervalString = printInterval(
+              interval,
+              resolutionInMs,
+              pointWidth
+            );
+            return gapPad + intervalString;
           })
           .join("")
     ),
   ].join("\n");
 }
 
-function getDaysInInterval(interval) {
-  let start = new Date(interval.start);
-  start.setHours(0);
-  start.setMinutes(0);
-  start.setSeconds(0);
-  start.setMilliseconds(0);
-  const days = [];
-  do {
-    days.push({
-      time: start,
-      day: start.getDate(),
-      share:
-        start < interval.start
-          ? (interval.start.valueOf() - start.valueOf()) / MILLIS_IN_DAY
-          : 1,
-    });
-    start = new Date(start);
-    start.setDate(start.getDate() + 1);
-  } while (start <= interval.end);
-  return days;
+function figureOutBestPeriod(timePoints) {
+  let bestPeriod = "year";
+  const hasNotFullYear = timePoints.some(
+    (time) => !isEqual(startOfYear(time), time)
+  );
+  const hasNotFullMonth = timePoints.some(
+    (time) => !isEqual(startOfMonth(time), time)
+  );
+  const hasNotFullDay = timePoints.some(
+    (time) => !isEqual(startOfDay(time), time)
+  );
+  const hasNotFullHour = timePoints.some(
+    (time) => !isEqual(startOfHour(time), time)
+  );
+  const hasNotFullMinute = timePoints.some(
+    (time) => !isEqual(startOfMinute(time), time)
+  );
+  const hasNotFullSecond = timePoints.some(
+    (time) => !isEqual(startOfSecond(time), time)
+  );
+  if (!hasNotFullYear) {
+    const periodsInYears = getPeriodsDurations(
+      timePoints,
+      differenceInYears
+    ).sort();
+    const resolutionInYears = gcd(periodsInYears);
+    const smallestPeriod = periodsInYears[0];
+    const pointWidth = Math.ceil((5 * resolutionInYears) / smallestPeriod);
+    return {
+      resolution: resolutionInYears,
+      diff: differenceInYears,
+      pointWidth,
+    };
+  }
+}
+
+function getPeriodsDurations(timePoints, diffFunction) {
+  const [, ...periodsDurations] = timePoints.map((time, i, array) =>
+    i > 0 ? diffFunction(time, array[i - 1]) : 0
+  );
+  return periodsDurations;
+}
+
+function printGap(interval, isFirst, resolutionInMs, pointWidth) {
+  const duration = differenceInMilliseconds(interval.end, interval.start);
+  return "".padStart(
+    (duration / resolutionInMs) * pointWidth - (isFirst ? 0 : 2)
+  );
+}
+
+function printInterval(interval, resolutionInMs, pointWidth) {
+  const duration = differenceInMilliseconds(interval.end, interval.start);
+  return (
+    `${interval.start.getHours()}`.padStart(2, " ") +
+    "".padEnd((duration / resolutionInMs) * pointWidth - 2, "-") +
+    `${interval.end.getHours()}`.padStart(
+      2,
+      interval.end.getHours() === 0 ? "0" : "-"
+    )
+  );
 }
 
 function sanitizeData(data, columns) {
@@ -123,6 +184,6 @@ function getGroupKeys(data) {
 }
 
 function getColumnWidth(values) {
-  const [lonogest] = values.map((v) => v.length).sort((a, b) => b - a);
-  return lonogest;
+  const [longest] = values.map((v) => v.length).sort((a, b) => b - a);
+  return longest;
 }
