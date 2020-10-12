@@ -23,5 +23,9 @@
     "presets": [
       "@babel/preset-env"
     ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mlewando/ascii-timeline.git"
   }
 }
