@@ -1,7 +1,7 @@
 {
   "name": "@mlewando/ascii-timeline",
   "version": "1.0.0",
-  "description": "Forth and back conversion for ACII art based timeline table and JS objects/JSON",
+  "description": "Forth and back conversion for ASCII art based timeline table and JS objects/JSON",
   "main": "index.js",
   "scripts": {
     "test": "jest",
