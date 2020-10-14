@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "build": "babel src --ignore '**/*.spec.js' -d lib"
+    "build": "babel src --ignore '**/*.spec.js' -d dist"
   },
   "author": "Mateusz Lewandowski",
   "license": "MIT",

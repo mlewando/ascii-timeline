@@ -1,11 +1,6 @@
-import {
-  addMonths,
-  differenceInHours,
-  eachDayOfInterval,
-  eachMonthOfInterval,
-  format,
-  startOfMonth,
-} from "date-fns";
+import { isEqual } from "date-fns";
+
+import { calculateResolution } from "./resolutionCalculator";
 
 export function printAscii(data) {
   const columns = getGroupKeys(data).map((key) => {
@@ -18,31 +13,12 @@ export function printAscii(data) {
   });
 
   const rows = sanitizeData(data, columns);
-  const resolutionSettings = {
-    toPoints: (duration) => duration / 2,
-    diff: differenceInHours,
-    timeline: [
-      {
-        timePoints: eachMonthOfInterval,
-        format: (time) => format(time, "yyyy-MM"),
-        width: (time) =>
-          differenceInHours(
-            addMonths(startOfMonth(time), 1),
-            startOfMonth(time)
-          ),
-      },
-      {
-        timePoints: eachDayOfInterval,
-        format: (time) => `${time.getDate()}`.padStart(2, "0"),
-        width: () => 24,
-      },
-    ],
-  };
   const timePoints = [
     ...new Set(data.flatMap((e) => [e.start.valueOf(), e.end.valueOf()])),
   ]
     .sort()
     .map((timestamp) => new Date(timestamp));
+  const resolutionSettings = calculateResolution(timePoints);
   const timelineInterval = {
     start: timePoints[0],
     end: timePoints[timePoints.length - 1],
@@ -53,8 +29,9 @@ export function printAscii(data) {
       .map((time) => {
         const share =
           time < timelineInterval.start
-            ? resolutionSettings.diff(timelineInterval.start, time) /
-              level.width(time)
+            ? 1 -
+              resolutionSettings.diff(timelineInterval.start, time) /
+                level.width(time)
             : 1;
         return level
           .format(time)
@@ -89,7 +66,12 @@ export function printAscii(data) {
             );
 
             const intervalString = printInterval(interval, resolutionSettings);
-            return gapPad + intervalString;
+            return (
+              gapPad +
+              (i > 0 && isEqual(array[i - 1].end, interval.start)
+                ? intervalString.substr(2)
+                : intervalString)
+            );
           })
           .join("")
     ),
@@ -121,7 +103,7 @@ function sanitizeData(data, columns) {
         end: e.end,
         id: columns.map((column) => e[column.key] || "-").join("_"),
         label: columns
-          .map((column) => e[column.key].padEnd(column.width, " "))
+          .map((column) => (e[column.key] || "").padEnd(column.width, " "))
           .join(" "),
       }))
       .reduce((map, row) => {
@@ -151,6 +133,6 @@ function getGroupKeys(data) {
 }
 
 function getColumnWidth(values) {
-  const [longest] = values.map((v) => v.length).sort((a, b) => b - a);
+  const [longest] = values.map((v) => v?.length ?? 0).sort((a, b) => b - a);
   return longest;
 }

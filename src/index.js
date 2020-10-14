@@ -1,0 +1,1 @@
+export { printAscii } from "./printAscii";
