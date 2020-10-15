@@ -19,7 +19,7 @@ import {
   eachDayOfInterval,
 } from "date-fns";
 
-export function calculateResolution(timePoints) {
+export function calculateResolution(timePoints, periods) {
   const hasNotFullYear = timePoints.some(
     (time) => !isEqual(startOfYear(time), time)
   );
@@ -39,20 +39,22 @@ export function calculateResolution(timePoints) {
     (time) => !isEqual(startOfSecond(time), time)
   );
   if (!hasNotFullYear) {
-    return calculateYearResolution(timePoints);
+    return calculateYearResolution(periods);
   } else if (!hasNotFullMonth) {
-    return calculateMonthResolution(timePoints);
+    return calculateMonthResolution(periods);
   } else if (!hasNotFullDay) {
-    return calculateDayResolution(timePoints);
+    return calculateDayResolution(periods);
   } else if (!hasNotFullHour) {
-    return calculateHourResolution(timePoints);
+    return calculateHourResolution(periods);
   }
 }
 
-function calculateHourResolution(timePoints) {
-  const periods = getPeriodsDurations(timePoints, differenceInHours).sort(
-    (a, b) => a - b
-  );
+function calculateHourResolution(intervals) {
+  const periods = [
+    ...new Set(
+      intervals.map(({ start, end }) => differenceInHours(end, start))
+    ),
+  ].sort((a, b) => a - b);
   const resolution = gcd(periods);
   const smallestPeriod = periods[0];
   const pointWidth = Math.ceil((3 * resolution) / smallestPeriod);
@@ -75,17 +77,15 @@ function calculateHourResolution(timePoints) {
     ],
   };
 }
-function calculateDayResolution(timePoints) {
-  const periods = getPeriodsDurations(timePoints, differenceInDays).sort(
-    (a, b) => a - b
-  );
+function calculateDayResolution(intervals) {
+  const periods = getPeriodsDurations(intervals, differenceInDays);
   const resolution = gcd(periods);
   const smallestPeriod = periods[periods.length - 1];
   const pointWidth = Math.ceil((3 * resolution) / smallestPeriod);
   const shortestMonth = Math.min(
     eachMonthOfInterval({
-      start: Math.min(timePoints),
-      end: Math.max(timePoints),
+      start: new Date(Math.min(intervals.map(i => i.start.valueOf()))),
+      end: new Date(Math.max(intervals.map(i => i.end.valueOf()))_,
     }).map((month) => differenceInDays(endOfMonth(month), startOfMonth(month)))
   );
   const toPoints = (duration) => (duration * pointWidth) / resolution;
@@ -123,10 +123,8 @@ function calculateDayResolution(timePoints) {
   };
 }
 
-function calculateMonthResolution(timePoints) {
-  const periods = getPeriodsDurations(timePoints, differenceInMonths).sort(
-    (a, b) => a - b
-  );
+function calculateMonthResolution(intervals) {
+  const periods = getPeriodsDurations(intervals, differenceInMonths);
   const resolution = gcd(periods);
   const smallestPeriod = periods[0];
   const pointWidth = Math.ceil((3 * resolution) / smallestPeriod);
@@ -143,10 +141,8 @@ function calculateMonthResolution(timePoints) {
   };
 }
 
-function calculateYearResolution(timePoints) {
-  const periods = getPeriodsDurations(timePoints, differenceInYears).sort(
-    (a, b) => a - b
-  );
+function calculateYearResolution(intervals) {
+  const periods = getPeriodsDurations(intervals, differenceInYears);
   const resolution = gcd(periods);
   const smallestPeriod = periods[0];
   const pointWidth = Math.ceil((5 * resolution) / smallestPeriod);
@@ -163,9 +159,10 @@ function calculateYearResolution(timePoints) {
   };
 }
 
-function getPeriodsDurations(timePoints, diffFunction) {
-  const [, ...periodsDurations] = timePoints.map((time, i, array) =>
-    i > 0 ? diffFunction(time, array[i - 1]) : 0
-  );
-  return periodsDurations;
+function getPeriodsDurations(intervals, diffFunction) {
+  return [
+    ...new Set(
+      intervals.map(({ start, end }) => diffFunction(end, start))
+    ),
+  ].sort((a, b) => a - b);
 }

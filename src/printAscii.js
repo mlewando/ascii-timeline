@@ -18,11 +18,14 @@ export function printAscii(data) {
   ]
     .sort()
     .map((timestamp) => new Date(timestamp));
-  const resolutionSettings = calculateResolution(timePoints);
   const timelineInterval = {
     start: timePoints[0],
     end: timePoints[timePoints.length - 1],
   };
+  const resolutionSettings = calculateResolution(
+    timePoints,
+    getIntervalsFromPeriodsAndGaps(rows, timelineInterval)
+  );
   const timelines = resolutionSettings.timeline.map((level) =>
     level
       .timePoints(timelineInterval)
@@ -93,6 +96,26 @@ function printInterval(interval, { diff, toPoints }) {
       interval.end.getHours() === 0 ? "0" : "-"
     )
   );
+}
+
+function getIntervalsFromPeriodsAndGaps(data, timelineInterval) {
+  return Object.values(data)
+    .map((row) => row.intervals)
+    .flatMap((intervals) =>
+      intervals.flatMap((interval, i, array) => {
+        const result = [];
+        if (i === 0 && !isEqual(interval.start, timelineInterval.start)) {
+          result.push({ start: timelineInterval.start, end: interval.start });
+        }
+        result.push(interval);
+        if (i + 1 < array.length) {
+          result.push({ start: interval.end, end: array[i + 1].start });
+        } else if (!isEqual(interval.end, timelineInterval.end)) {
+          result.push({ start: interval.end, end: timelineInterval.end });
+        }
+        return result;
+      })
+    );
 }
 
 function sanitizeData(data, columns) {

@@ -36,11 +36,11 @@ it("should print data in less res", () => {
     },
     {
       data: "2",
-      start: new Date("2020-05-01T18:00:00.000"),
+      start: new Date("2020-05-01T12:00:00.000"),
       end: new Date("2020-05-02T06:00:00.000"),
     },
     {
-      data: "1",
+      data: "1",Okopowa 21/27 te
       start: new Date("2020-05-02T12:00:00.000"),
       end: new Date("2020-05-03T00:00:00.000"),
     },
@@ -50,6 +50,6 @@ it("should print data in less res", () => {
     "     2020-05\n" +
       "data 01  02      03\n" +
       "1    12--00  12--00\n" +
-      "2      18---6"
+      "2    12-----6"
   );
 });
