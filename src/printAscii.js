@@ -24,24 +24,37 @@ export function printAscii(data) {
   };
   const resolutionSettings = calculateResolution(
     timePoints,
-    getIntervalsFromPeriodsAndGaps(rows, timelineInterval)
+    getIntervalsFromPeriodsAndGaps(rows, timelineInterval),
+    Object.values(rows).flatMap((row) => row.intervals)
   );
   const timelines = resolutionSettings.timeline.map((level) =>
     level
       .timePoints(timelineInterval)
       .map((time) => {
-        const share =
-          time < timelineInterval.start
-            ? 1 -
-              resolutionSettings.diff(timelineInterval.start, time) /
-                level.width(time)
-            : 1;
-        return level
-          .format(time)
-          .padEnd(resolutionSettings.toPoints(level.width(time)) * share);
+        const labelPoint = new Date(
+          Math.max(time.valueOf(), timelineInterval.start.valueOf())
+        );
+        return {
+          label: level.format(time),
+          width:
+            (resolutionSettings.toPoints(level.width(time)) *
+              (level.width(time) - resolutionSettings.diff(labelPoint, time))) /
+            level.width(time),
+        };
       })
-      .join("")
-      .trim()
+      .reduce(
+        ({ line, debt }, { label, width }) => {
+          if (debt >= 0) {
+            return {
+              line: line + label.padEnd(width),
+              debt: width - label.length,
+            };
+          }
+          return { line: line + "".padEnd(width + debt), debt: 0 };
+        },
+        { line: "", debt: 0 }
+      )
+      .line.trim()
   );
 
   const columnLabels = columns.map((c) => c.label).join(" ");
@@ -86,15 +99,12 @@ function printGap(interval, isFirst, { toPoints, diff }) {
   return "".padStart(toPoints(duration) - (isFirst ? 0 : 2));
 }
 
-function printInterval(interval, { diff, toPoints }) {
+function printInterval(interval, { diff, toPoints, format }) {
   const duration = diff(interval.end, interval.start);
+  const startLabel = format(interval.start);
   return (
-    `${interval.start.getHours()}`.padStart(2, " ") +
-    "".padEnd(toPoints(duration) - 2, "-") +
-    `${interval.end.getHours()}`.padStart(
-      2,
-      interval.end.getHours() === 0 ? "0" : "-"
-    )
+    startLabel.padEnd(toPoints(duration), "-") +
+    format(interval.end).replace(/\s/gi, "-")
   );
 }
 

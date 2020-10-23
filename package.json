@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "build": "babel src --ignore '**/*.spec.js' -d dist"
+    "build": "babel src --ignore '**/*.spec.js' -d dist && chmod u+x ./dist/bin.js",
+    "build:watch": "babel src --ignore '**/*.spec.js' -d dist -w"
   },
   "author": "Mateusz Lewandowski",
   "license": "MIT",
@@ -21,7 +22,14 @@
   },
   "babel": {
     "presets": [
-      "@babel/preset-env"
+      [
+        "@babel/preset-env",
+        {
+          "targets": {
+            "node": "current"
+          }
+        }
+      ]
     ]
   },
   "repository": {
@@ -30,6 +38,10 @@
   },
   "dependencies": {
     "compute-gcd": "^1.2.0",
-    "date-fns": "^2.16.1"
+    "date-fns": "^2.16.1",
+    "get-stdin": "^8.0.0"
+  },
+  "bin": {
+    "print-timeline": "./dist/bin.js"
   }
 }
