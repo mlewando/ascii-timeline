@@ -1,8 +1,8 @@
 {
-  "name": "@mlewando/ascii-timeline",
+  "name": "ascii-timeline",
   "version": "1.0.0",
   "description": "Forth and back conversion for ASCII art based timeline table and JS objects/JSON",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "test": "jest",
     "build": "babel src --ignore '**/*.spec.js' -d dist && chmod u+x ./dist/bin.js",
@@ -42,6 +42,6 @@
     "get-stdin": "^8.0.0"
   },
   "bin": {
-    "print-timeline": "./dist/bin.js"
+    "print-ascii-timeline": "dist/bin.js"
   }
 }

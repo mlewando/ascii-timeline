@@ -1,1 +1,1 @@
-export { printAscii } from "./printAscii";
+export { printAscii as printAsciiTimeline } from "./printAscii";

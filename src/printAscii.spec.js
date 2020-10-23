@@ -140,3 +140,39 @@ type 01           03
 2       2----------0`
   );
 });
+it("should print multiple metadata", () => {
+  const result = printAscii([
+    {
+      kind: "A",
+      type: "1",
+      start: new Date("2020-02-03T12:00"),
+      end: new Date("2020-02-03T16:00"),
+    },
+    {
+      kind: "A",
+      type: "1",
+      start: new Date("2020-02-04T08:00"),
+      end: new Date("2020-02-04T16:00"),
+    },
+    {
+      kind: "A",
+      type: "2",
+      start: new Date("2020-02-03T14:00"),
+      end: new Date("2020-02-04T12:00"),
+    },
+    {
+      kind: "B",
+      type: "1",
+      start: new Date("2020-02-03T10:00"),
+      end: new Date("2020-02-04T22:00"),
+    },
+  ]);
+
+  expect(result).toBe(
+    `          2020-02
+kind type 03            04
+A    1      12--16               8------16
+A    2        14--------------------12
+B    1    10----------------------------------22`
+  );
+});
