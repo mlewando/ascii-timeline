@@ -1,6 +1,6 @@
 {
   "name": "ascii-timeline",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Forth and back conversion for ASCII art based timeline table and JS objects/JSON",
   "main": "dist/index.js",
   "scripts": {
