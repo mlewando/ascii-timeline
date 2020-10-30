@@ -296,10 +296,10 @@ function calculateBasicResolution(
   labelWidth
 ) {
   const periods = getPeriodsDurations(intervals, diffFunction);
-  const smallestPeriod = getPeriodsDurations(
-    printableIntervals,
-    diffFunction
-  )[0];
+  const smallestPeriod =
+    getPeriodsDurations(printableIntervals, diffFunction).find(
+      (duration) => duration > 0
+    ) || 1;
   const resolution = gcd(periods) || periods[0];
   const pointWidth = Math.ceil(
     ((labelWidth + 1) * resolution) / smallestPeriod

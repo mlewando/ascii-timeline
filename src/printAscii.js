@@ -102,6 +102,9 @@ function printGap(interval, isFirst, { toPoints, diff }) {
 function printInterval(interval, { diff, toPoints, format }) {
   const duration = diff(interval.end, interval.start);
   const startLabel = format(interval.start);
+  if (duration === 0) {
+    return startLabel;
+  }
   return (
     startLabel.padEnd(toPoints(duration), "-") +
     format(interval.end).replace(/\s/gi, "-")

@@ -176,3 +176,40 @@ A    2        14--------------------12
 B    1    10----------------------------------22`
   );
 });
+
+it("should handle crossDay 24h interval in days schedule", () => {
+  const result = printAscii([
+    {
+      kind: "A",
+      start: new Date("2020-02-03T02:00"),
+      end: new Date("2020-02-04T02:00"),
+    },
+    {
+      kind: "A",
+      start: new Date("2020-02-04T08:00"),
+      end: new Date("2020-02-04T16:00"),
+    },
+  ]);
+
+  expect(result).toBe(`     2020-02
+kind 03         04
+A     2-----------2  8--16`);
+});
+
+it("should not fail miserably", () => {
+  const data = [
+    {
+      type: "A",
+      start: new Date("2020-05-01T02:00"),
+      end: new Date("2020-05-01T02:00"),
+    },
+    {
+      type: "A",
+      start: new Date("2020-05-03T00:00"),
+      end: new Date("2020-05-03T16:00"),
+    },
+  ];
+  expect(printAscii(data)).toBe(`     2020-05
+type 01         02          03
+A     2                      0------16`);
+});
